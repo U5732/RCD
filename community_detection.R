@@ -1,34 +1,34 @@
-# svc (milsav@gmail.com)
-
 library("igraph")
 
-# cp is obtained community partition
+# cp - community partition
 print_info <- function(cp) {
 	cat("Algorithm: ", algorithm(cp), 
-        "\nNumber of communities: ", length(cp), 
+          "\nNumber of communities: ", length(cp), 
 	    "\nModularity: ", modularity(cp), 
-        "\nCommunity sizes: \n", sort(sizes(cp)), "\n\n")
+          "\nCommunity sizes: \n", sort(sizes(cp)), "\n\n")
 }
 
+# p    - community partitions
+# attr - normalized mutual information, rand, adjusted-rand, etc.
 compare_communities <- function(p, attr) {
 	cat("Comparing communities using ", attr, "\n")
 	for (i in 2:length(p)) {
 		for (j in 1:(i-1)) {	
 			sim <- compare(p[[i]], p[[j]], attr);
 			cat(algorithm(p[[i]]), " -- ",
-                algorithm(p[[j]]), ", sim = ", sim, "\n")
+                      algorithm(p[[j]]), ", sim = ", sim, "\n")
 		}
 	}
 	cat("\n\n")
 }
 
 # g - graph
-# p - community partition
+# p - community partitions
 community_quality <- function(g, p, debug=FALSE) {
  	comms <- list();
 	length(comms) <- length(p)
-      for (i in 1:length(V(g))) {
-      	c <- membership(p)[i]
+	for (i in 1:length(V(g))) {
+		c <- membership(p)[i]
 		comms[[c]] <- append(comms[[c]], list(i))
 	}
 
@@ -88,7 +88,38 @@ community_quality <- function(g, p, debug=FALSE) {
 	}
 }
 
-perform_community_detection <- function(input_file, file_format) {	
+# p - community partitions
+# g - graph
+export <- function(p, g, out_file) {
+	sink(file=out_file, append=FALSE)
+
+	cat("NUM,ID,")
+	for (j in 1:length(p)) {
+		cat(algorithm(p[[j]]))
+		if (j < length(p)) {
+			cat(",")
+		}
+	}
+	cat("\n")
+
+	for (i in 1:length(V(g))) {
+      	cat(V(g)[i]) 
+		cat(",") 
+		cat(V(g)[i]$id) 
+		cat(",")
+		for (j in 1:length(p)) {
+			cat(membership(p[[j]])[i])
+			if (j < length(p)) {
+				cat(",")
+			}
+		}
+		cat("\n")
+	}
+
+	sink()
+}
+
+perform_community_detection <- function(input_file, file_format, out_file) {	
 	cat("Community detection for ", input_file, "\n")
 	g <- read.graph(input_file, file_format)
 	
@@ -118,6 +149,7 @@ perform_community_detection <- function(input_file, file_format) {
 	}
 
 	cat("Community detection finished...\n")
+	export(p, g, out_file)
 }
 
-perform_community_detection("Comp_0.net", "pajek")
+perform_community_detection("Comp_0.net", "pajek", "Comp_0_nodes.dat")
