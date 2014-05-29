@@ -1,3 +1,5 @@
+# svc (milsav@gmail.com)
+
 library("igraph")
 
 # cp - community partition
